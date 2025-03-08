@@ -97,25 +97,24 @@
   </div>
 
   <!-- Firebase CDN 모듈 방식 -->
-  <script type="module">
-    // Firebase 모듈 임포트 (버전 11.4.0 사용)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
-    import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-storage.js";
+ <script type="module">
+   // Import the functions you need from the SDKs you need
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+   // TODO: Add SDKs for Firebase products that you want to use
+   // https://firebase.google.com/docs/web/setup#available-libraries
 
-    // Firebase 설정 정보 (실제 콘솔의 값을 사용)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDyZByBND5Z-JJucW0pRwEV47j8PNdXrvk",
-      authDomain: "kangmaeng-9c27b.firebaseapp.com",
-      databaseURL: "https://kangmaeng-9c27b-default-rtdb.firebaseio.com",
-      projectId: "kangmaeng-9c27b",
-      storageBucket: "kangmaeng-9c27b.firebasestorage.app",
-      messagingSenderId: "785265057150",
-      appId: "1:785265057150:web:3f9bbd751163caa46ae72f",
-      measurementId: "G-CN3J8B1KCD"
-    };
-
+   // Your web app's Firebase configuration
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+   const firebaseConfig = {
+     apiKey: "AIzaSyCX177wGKOIMYvLtyoYA8HMI4ycPt1AWys",
+     authDomain: "kangmaeng-1c606.firebaseapp.com",
+     projectId: "kangmaeng-1c606",
+     storageBucket: "kangmaeng-1c606.firebasestorage.app",
+     messagingSenderId: "425426369934",
+     appId: "1:425426369934:web:3db11a449a78f66a4a78df",
+     measurementId: "G-MDXDMHYLK7"
+   };
     // Firebase 초기화
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
