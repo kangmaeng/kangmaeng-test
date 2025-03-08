@@ -7,74 +7,74 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
+      display: flex; 
+      justify-content: center; 
       align-items: center;
-      height: 100vh;
-      background-color: #f4f4f4;
-      margin: 0;
+      height: 100vh; 
+      background-color: #f4f4f4; 
+      margin: 0; 
       flex-direction: column;
     }
     .container {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white; 
+      padding: 20px; 
+      border-radius: 10px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.1); 
       text-align: center;
     }
     input[type="file"] {
-      display: block;
+      display: block; 
       margin: 10px auto;
     }
     .preview {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: center; 
       margin-top: 20px;
     }
     .preview div {
-      position: relative;
+      position: relative; 
       margin: 5px;
     }
     .preview img {
-      width: 300px;
-      height: 300px;
-      object-fit: cover;
-      border-radius: 5px;
+      width: 200px; 
+      height: 200px; 
+      object-fit: cover; 
+      border-radius: 5px; 
       border: 1px solid #ddd;
     }
     .remove-btn {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: red;
-      color: white;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      font-size: 12px;
+      position: absolute; 
+      top: 5px; 
+      right: 5px; 
+      background: red; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      padding: 5px; 
+      font-size: 12px; 
       border-radius: 5px;
     }
     .text-save {
       margin-top: 20px;
     }
     textarea {
-      width: 80%;
-      height: 50px;
-      padding: 10px;
+      width: 80%; 
+      height: 50px; 
+      padding: 10px; 
       font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
+      border-radius: 5px; 
+      border: 1px solid #ddd; 
       resize: none;
     }
     button {
-      margin-top: 10px;
-      padding: 10px 15px;
+      margin-top: 10px; 
+      padding: 10px 15px; 
       font-size: 16px;
-      background-color: blue;
-      color: white;
-      border: none;
-      cursor: pointer;
+      background-color: blue; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
       border-radius: 5px;
     }
   </style>
@@ -83,95 +83,122 @@
   <div class="container">
     <h2>정약용</h2>
     <p>이곳은 정약용의 마니또 인증방입니다. 본인의 마니또 활동 인증 사진을 업로드해주세요. 아래에는 나의 예상 마니또를 적어주세요.</p>
+    
     <input type="file" id="fileInput" accept="image/*" multiple>
     <div class="preview" id="preview"></div>
+    
     <div class="text-save">
       <label for="textInput">예상 마니또 :</label>
       <textarea id="textInput" placeholder="여기에 입력"></textarea>
       <button id="saveTextBtn">저장</button>
     </div>
+    
     <a href="index.html">돌아가기</a>
   </div>
 
-  <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.js"></script>
-  <script>
-    const db = new Dexie("ManitoDB");
-    db.version(1).stores({
-      images: "++id, room, data",
-      texts: "room"
-    });
+  <!-- Firebase CDN 모듈 방식 -->
+  <script type="module">
+    // Firebase 모듈 임포트 (버전 11.4.0 사용)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+    import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-storage.js";
 
+    // Firebase 설정 정보 (실제 콘솔의 값을 사용)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyZByBND5Z-JJucW0pRwEV47j8PNdXrvk",
+      authDomain: "kangmaeng-9c27b.firebaseapp.com",
+      databaseURL: "https://kangmaeng-9c27b-default-rtdb.firebaseio.com",
+      projectId: "kangmaeng-9c27b",
+      storageBucket: "kangmaeng-9c27b.firebasestorage.app",
+      messagingSenderId: "785265057150",
+      appId: "1:785265057150:web:3f9bbd751163caa46ae72f",
+      measurementId: "G-CN3J8B1KCD"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    // 현재 방의 키 (정약용 방)
     const roomKey = "room-3-1";
 
-    function addImageToDB(dataURL) {
-      db.images.add({ room: roomKey, data: dataURL }).then(id => {
-        const preview = document.getElementById('preview');
-        const imgContainer = document.createElement('div');
-        const img = document.createElement('img');
-        img.src = dataURL;
-        const removeBtn = document.createElement('button');
-        removeBtn.innerText = 'X';
-        removeBtn.classList.add('remove-btn');
-        imgContainer.dataset.id = id;
-        removeBtn.addEventListener('click', function() {
-          const recordId = Number(imgContainer.dataset.id);
-          db.images.delete(recordId).then(() => {
-            imgContainer.remove();
-          });
-        });
-        imgContainer.appendChild(img);
-        imgContainer.appendChild(removeBtn);
-        preview.appendChild(imgContainer);
-      });
-    }
+    // 이미지 업로드 처리
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
 
-    document.getElementById('fileInput').addEventListener('change', function(event) {
+    fileInput.addEventListener('change', (event) => {
       const files = event.target.files;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          addImageToDB(e.target.result);
-        };
-        reader.readAsDataURL(file);
+        // Storage 경로: rooms/room-3-1/파일이름
+        const fileStorageRef = storageRef(storage, `rooms/${roomKey}/${file.name}`);
+        // 파일 업로드
+        uploadBytes(fileStorageRef, file)
+          .then((snapshot) => getDownloadURL(snapshot.ref))
+          .then((downloadURL) => {
+            // 업로드 성공 시, 다운로드 URL을 DB에 저장 (images 목록에 추가)
+            const imagesRef = ref(db, `rooms/${roomKey}/images`);
+            const newImageRef = push(imagesRef);
+            return set(newImageRef, { url: downloadURL });
+          })
+          .catch((error) => {
+            console.error("이미지 업로드 오류:", error);
+          });
       }
     });
 
-    document.getElementById('saveTextBtn').addEventListener('click', function() {
-      const textValue = document.getElementById("textInput").value;
-      db.texts.put({ room: roomKey, text: textValue }).then(() => {
-        alert("저장되었습니다!");
-      });
-    });
-
-    window.onload = function() {
-      db.images.where("room").equals(roomKey).toArray().then(images => {
-        const preview = document.getElementById('preview');
-        images.forEach(record => {
+    // DB의 이미지 목록을 실시간 감지하여 UI에 표시
+    const imagesRef = ref(db, `rooms/${roomKey}/images`);
+    onValue(imagesRef, (snapshot) => {
+      preview.innerHTML = ""; // 기존 이미지 목록 초기화
+      const imagesData = snapshot.val();
+      if (imagesData) {
+        Object.entries(imagesData).forEach(([key, imageObj]) => {
           const imgContainer = document.createElement('div');
           const img = document.createElement('img');
-          img.src = record.data;
+          img.src = imageObj.url;
+          
           const removeBtn = document.createElement('button');
-          removeBtn.innerText = 'X';
-          removeBtn.classList.add('remove-btn');
-          imgContainer.dataset.id = record.id;
-          removeBtn.addEventListener('click', function() {
-            const recordId = Number(imgContainer.dataset.id);
-            db.images.delete(recordId).then(() => {
-              imgContainer.remove();
-            });
+          removeBtn.textContent = 'X';
+          removeBtn.className = 'remove-btn';
+          removeBtn.addEventListener('click', () => {
+            // DB에서 해당 이미지 항목 삭제
+            set(ref(db, `rooms/${roomKey}/images/${key}`), null)
+              .catch((error) => console.error("이미지 삭제 오류:", error));
+            // 선택 사항: Storage에서도 파일 삭제 (파일명 정보를 별도로 저장했다면 가능)
+            // const fileRef = storageRef(storage, `rooms/${roomKey}/${file.name}`);
+            // deleteObject(fileRef).catch(error => console.error("스토리지 삭제 오류:", error));
           });
+
           imgContainer.appendChild(img);
           imgContainer.appendChild(removeBtn);
           preview.appendChild(imgContainer);
         });
-      });
-      db.texts.get(roomKey).then(record => {
-        if(record && record.text) {
-          document.getElementById("textInput").value = record.text;
-        }
-      });
-    };
+      }
+    });
+
+    // 텍스트 저장 및 불러오기 처리
+    const saveTextBtn = document.getElementById('saveTextBtn');
+    const textInput = document.getElementById('textInput');
+
+    saveTextBtn.addEventListener('click', () => {
+      const textValue = textInput.value;
+      set(ref(db, `rooms/${roomKey}/text`), textValue)
+        .then(() => alert("텍스트가 저장되었습니다!"))
+        .catch((error) => console.error("텍스트 저장 오류:", error));
+    });
+
+    // 페이지 로드시 저장된 텍스트 불러오기
+    const textRef = ref(db, `rooms/${roomKey}/text`);
+    onValue(textRef, (snapshot) => {
+      const savedText = snapshot.val();
+      if (savedText) {
+        textInput.value = savedText;
+      }
+    });
   </script>
 </body>
 </html>
