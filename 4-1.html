@@ -19,7 +19,7 @@
       background: white;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
     }
     input[type="file"] {
@@ -37,8 +37,8 @@
       margin: 5px;
     }
     .preview img {
-      width: 700px;
-      height: 700px;
+      width: 300px;
+      height: 300px;
       object-fit: cover;
       border-radius: 5px;
       border: 1px solid #ddd;
@@ -85,89 +85,91 @@
     <p>이곳은 강명훈의 마니또 인증방입니다. 본인의 마니또 활동 인증 사진을 업로드해주세요. 아래에는 나의 예상 마니또를 적어주세요.</p>
     <input type="file" id="fileInput" accept="image/*" multiple>
     <div class="preview" id="preview"></div>
-    
     <div class="text-save">
       <label for="textInput">예상 마니또 :</label>
       <textarea id="textInput" placeholder="여기에 입력"></textarea>
-      <button onclick="saveText()">저장</button>
+      <button id="saveTextBtn">저장</button>
     </div>
-    
     <a href="index.html">돌아가기</a>
   </div>
-  
+
+  <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.js"></script>
   <script>
-    // roomKey를 "room-4-1"로 설정하여 독립적인 저장 공간을 확보
+    const db = new Dexie("ManitoDB");
+    db.version(1).stores({
+      images: "++id, room, data",
+      texts: "room"
+    });
+
     const roomKey = "room-4-1";
-    
+
+    function addImageToDB(dataURL) {
+      db.images.add({ room: roomKey, data: dataURL }).then(id => {
+        const preview = document.getElementById('preview');
+        const imgContainer = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = dataURL;
+        const removeBtn = document.createElement('button');
+        removeBtn.innerText = 'X';
+        removeBtn.classList.add('remove-btn');
+        imgContainer.dataset.id = id;
+        removeBtn.addEventListener('click', function() {
+          const recordId = Number(imgContainer.dataset.id);
+          db.images.delete(recordId).then(() => {
+            imgContainer.remove();
+          });
+        });
+        imgContainer.appendChild(img);
+        imgContainer.appendChild(removeBtn);
+        preview.appendChild(imgContainer);
+      });
+    }
+
     document.getElementById('fileInput').addEventListener('change', function(event) {
-      const preview = document.getElementById('preview');
       const files = event.target.files;
-      
-      let uploadedImages = JSON.parse(localStorage.getItem(roomKey + "-images")) || [];
-      
-      if (uploadedImages.length + files.length > 10) {
-        alert("최대 10개의 이미지만 업로드할 수 있습니다.");
-        return;
-      }
-      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const reader = new FileReader();
         reader.onload = function(e) {
-          const imgContainer = document.createElement('div');
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          
-          const removeBtn = document.createElement('button');
-          removeBtn.innerText = 'X';
-          removeBtn.classList.add('remove-btn');
-          removeBtn.addEventListener('click', function() {
-            uploadedImages = uploadedImages.filter(item => item !== img.src);
-            localStorage.setItem(roomKey + "-images", JSON.stringify(uploadedImages));
-            imgContainer.remove();
-          });
-          
-          imgContainer.appendChild(img);
-          imgContainer.appendChild(removeBtn);
-          preview.appendChild(imgContainer);
-          uploadedImages.push(img.src);
-          localStorage.setItem(roomKey + "-images", JSON.stringify(uploadedImages));
+          addImageToDB(e.target.result);
         };
         reader.readAsDataURL(file);
       }
     });
-    
-    function saveText() {
-      const textInput = document.getElementById("textInput").value;
-      localStorage.setItem(roomKey + "-text", textInput);
-      alert("저장되었습니다!");
-    }
-    
+
+    document.getElementById('saveTextBtn').addEventListener('click', function() {
+      const textValue = document.getElementById("textInput").value;
+      db.texts.put({ room: roomKey, text: textValue }).then(() => {
+        alert("저장되었습니다!");
+      });
+    });
+
     window.onload = function() {
-      const savedText = localStorage.getItem(roomKey + "-text");
-      if (savedText) {
-        document.getElementById("textInput").value = savedText;
-      }
-      
-      const savedImages = JSON.parse(localStorage.getItem(roomKey + "-images")) || [];
-      savedImages.forEach(src => {
-        const imgContainer = document.createElement('div');
-        const img = document.createElement('img');
-        img.src = src;
-        
-        const removeBtn = document.createElement('button');
-        removeBtn.innerText = 'X';
-        removeBtn.classList.add('remove-btn');
-        removeBtn.addEventListener('click', function() {
-          let currentImages = JSON.parse(localStorage.getItem(roomKey + "-images")) || [];
-          currentImages = currentImages.filter(item => item !== src);
-          localStorage.setItem(roomKey + "-images", JSON.stringify(currentImages));
-          imgContainer.remove();
+      db.images.where("room").equals(roomKey).toArray().then(images => {
+        const preview = document.getElementById('preview');
+        images.forEach(record => {
+          const imgContainer = document.createElement('div');
+          const img = document.createElement('img');
+          img.src = record.data;
+          const removeBtn = document.createElement('button');
+          removeBtn.innerText = 'X';
+          removeBtn.classList.add('remove-btn');
+          imgContainer.dataset.id = record.id;
+          removeBtn.addEventListener('click', function() {
+            const recordId = Number(imgContainer.dataset.id);
+            db.images.delete(recordId).then(() => {
+              imgContainer.remove();
+            });
+          });
+          imgContainer.appendChild(img);
+          imgContainer.appendChild(removeBtn);
+          preview.appendChild(imgContainer);
         });
-        
-        imgContainer.appendChild(img);
-        imgContainer.appendChild(removeBtn);
-        document.getElementById('preview').appendChild(imgContainer);
+      });
+      db.texts.get(roomKey).then(record => {
+        if(record && record.text) {
+          document.getElementById("textInput").value = record.text;
+        }
       });
     };
   </script>
