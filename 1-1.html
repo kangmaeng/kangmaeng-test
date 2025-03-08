@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이순신</title>
+    <title>강감찬</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,6 +13,7 @@
             height: 100vh;
             background-color: #f4f4f4;
             margin: 0;
+            flex-direction: column;
         }
         .container {
             background: white;
@@ -21,17 +22,128 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        a {
-            text-decoration: none;
-            color: blue;
+        input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+        .preview {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .preview div {
+            position: relative;
+            margin: 5px;
+        }
+        .preview img {
+            width: 700px;
+            height: 700px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 12px;
+            border-radius: 5px;
+        }
+        .text-save {
+            margin-top: 20px;
+        }
+        textarea {
+            width: 80%;
+            height: 50px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            resize: none;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>이순신</h2>
-        <p>조선 시대의 명장, 이순신 장군의 페이지입니다.</p>
+        <h2>강감찬</h2>
+        <p>이곳은 강감찬의 마니또 인증방입니다. 본인의 마니또 활동 인증 사진을 업로드해주세요. 아래에는 나의 예상 마니또를 적어주세요.</p>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        <div class="preview" id="preview"></div>
+        
+        <div class="text-save">
+            <label for="textInput">예상 마니또 :</label>
+            <textarea id="textInput" placeholder="여기에 입력"></textarea>
+            <button onclick="saveText()">저장</button>
+        </div>
+        
         <a href="index.html">돌아가기</a>
     </div>
+    
+    <script>
+        let uploadedImages = [];
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const preview = document.getElementById('preview');
+            const files = event.target.files;
+            
+            if (uploadedImages.length + files.length > 10) {
+                alert("최대 10개의 이미지만 업로드할 수 있습니다.");
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgContainer = document.createElement('div');
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerText = 'X';
+                    removeBtn.classList.add('remove-btn');
+                    removeBtn.addEventListener('click', function() {
+                        uploadedImages = uploadedImages.filter(item => item !== imgContainer);
+                        imgContainer.remove();
+                    });
+                    
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(removeBtn);
+                    preview.appendChild(imgContainer);
+                    uploadedImages.push(imgContainer);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function saveText() {
+            const textInput = document.getElementById("textInput").value;
+            localStorage.setItem("savedText", textInput);
+            alert("저장되었습니다!");
+        }
+
+        window.onload = function() {
+            const savedText = localStorage.getItem("savedText");
+            if (savedText) {
+                document.getElementById("textInput").value = savedText;
+            }
+        };
+    </script>
 </body>
 </html>
